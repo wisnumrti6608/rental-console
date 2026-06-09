@@ -1,0 +1,238 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>History Transaksi</title>
+  <style>
+    :root {
+      --bg: #101418;
+      --panel: #171d23;
+      --panel-2: #202832;
+      --text: #f5f7fb;
+      --muted: #a9b3bf;
+      --line: #303a45;
+      --accent: #f2c94c;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    nav a {
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    nav a.active {
+      background: var(--accent);
+      border-color: #d3aa30;
+      color: #17140a;
+    }
+
+    button {
+      height: 42px;
+      padding: 0 15px;
+      border-radius: 7px;
+      border: 1px solid #d3aa30;
+      background: var(--accent);
+      color: #17140a;
+      cursor: pointer;
+      font: inherit;
+      font-weight: 800;
+    }
+
+    .notice {
+      min-height: 24px;
+      margin-bottom: 12px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .notice.error {
+      color: #ffb4b4;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    table {
+      width: 100%;
+      min-width: 820px;
+      border-collapse: collapse;
+    }
+
+    th,
+    td {
+      padding: 14px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 800;
+      text-transform: uppercase;
+    }
+
+    td {
+      font-size: 15px;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    .money {
+      font-weight: 900;
+    }
+
+    @media (max-width: 760px) {
+      header {
+        align-items: start;
+        flex-direction: column;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>History Transaksi</h1>
+        <nav aria-label="Navigasi">
+          <a href="/playstation-status.html">Dashboard</a>
+          <a class="active" href="/history.html">History Transaksi</a>
+        </nav>
+      </div>
+      <button id="refreshBtn" type="button">Refresh</button>
+    </header>
+
+    <div class="notice" id="notice"></div>
+    <section class="table-wrap" aria-label="Daftar transaksi">
+      <table>
+        <thead>
+          <tr>
+            <th>Nama pelanggan</th>
+            <th>Console</th>
+            <th>Jam mulai</th>
+            <th>Jam selesai sewa</th>
+            <th>Durasi</th>
+            <th>Total bayar</th>
+          </tr>
+        </thead>
+        <tbody id="historyRows">
+          <tr><td colspan="6">Memuat data...</td></tr>
+        </tbody>
+      </table>
+    </section>
+  </main>
+
+  <script>
+    const API_BASE = location.protocol === "file:" ? "http://localhost:3000" : "";
+    const rows = document.querySelector("#historyRows");
+    const notice = document.querySelector("#notice");
+
+    function formatDate(value) {
+      return new Date(value).toLocaleString("id-ID", {
+        dateStyle: "medium",
+        timeStyle: "short"
+      });
+    }
+
+    function formatDuration(minutes) {
+      const hours = Math.floor(minutes / 60);
+      const rest = minutes % 60;
+      if (hours && rest) return `${hours} jam ${rest} menit`;
+      if (hours) return `${hours} jam`;
+      return `${rest} menit`;
+    }
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      }).format(value);
+    }
+
+    async function loadHistory() {
+      try {
+        const response = await fetch(`${API_BASE}/api/transaksi`);
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || "Gagal memuat history.");
+
+        notice.textContent = data.length ? `${data.length} transaksi tersimpan.` : "Belum ada transaksi.";
+        notice.className = "notice";
+        rows.innerHTML = data.length ? data.map((item) => `
+          <tr>
+            <td>${item.nama_pelanggan}</td>
+            <td>${item.nama_console}</td>
+            <td>${formatDate(item.jam_mulai)}</td>
+            <td>${formatDate(item.jam_selesai)}</td>
+            <td>${formatDuration(item.durasi)}</td>
+            <td class="money">${formatMoney(item.total_bayar)}</td>
+          </tr>
+        `).join("") : `<tr><td colspan="6">Belum ada transaksi.</td></tr>`;
+      } catch (error) {
+        notice.textContent = `Backend belum aktif: ${error.message}`;
+        notice.className = "notice error";
+        rows.innerHTML = `<tr><td colspan="6">Tidak bisa memuat data.</td></tr>`;
+      }
+    }
+
+    document.querySelector("#refreshBtn").addEventListener("click", loadHistory);
+    loadHistory();
+  </script>
+</body>
+</html>

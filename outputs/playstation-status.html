@@ -1,0 +1,498 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Rental PlayStation</title>
+  <style>
+    :root {
+      --bg: #101418;
+      --panel: #171d23;
+      --panel-2: #202832;
+      --text: #f5f7fb;
+      --muted: #a9b3bf;
+      --green: #21c06b;
+      --green-soft: #143826;
+      --red: #f05252;
+      --red-soft: #3a1d22;
+      --line: #303a45;
+      --accent: #f2c94c;
+      font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1120px, calc(100% - 32px));
+      margin: 0 auto;
+      padding: 28px 0;
+    }
+
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: end;
+      gap: 16px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0;
+      font-size: clamp(28px, 4vw, 46px);
+      line-height: 1;
+      letter-spacing: 0;
+    }
+
+    nav {
+      display: flex;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    nav a {
+      display: inline-flex;
+      align-items: center;
+      height: 38px;
+      padding: 0 12px;
+      border: 1px solid var(--line);
+      border-radius: 7px;
+      background: var(--panel-2);
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 14px;
+    }
+
+    nav a.active {
+      background: var(--accent);
+      border-color: #d3aa30;
+      color: #17140a;
+    }
+
+    .clock {
+      color: var(--muted);
+      font-size: 15px;
+      text-align: right;
+      white-space: nowrap;
+    }
+
+    .toolbar {
+      display: grid;
+      grid-template-columns: 1.4fr 1fr 1fr 0.8fr auto;
+      gap: 10px;
+      align-items: end;
+      padding: 14px;
+      margin-bottom: 18px;
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 8px;
+    }
+
+    .field {
+      display: grid;
+      gap: 6px;
+    }
+
+    label {
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    select,
+    input,
+    button {
+      height: 42px;
+      border-radius: 7px;
+      border: 1px solid var(--line);
+      background: var(--panel-2);
+      color: var(--text);
+      font: inherit;
+    }
+
+    select,
+    input {
+      width: 100%;
+      padding: 0 12px;
+    }
+
+    button {
+      padding: 0 15px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    button.primary {
+      background: var(--accent);
+      color: #17140a;
+      border-color: #d3aa30;
+    }
+
+    button.danger {
+      background: #2b1719;
+      color: #ffd6d6;
+      border-color: #653037;
+    }
+
+    button:disabled {
+      cursor: not-allowed;
+      opacity: 0.55;
+    }
+
+    .notice {
+      min-height: 24px;
+      margin: -6px 0 14px;
+      color: var(--muted);
+      font-size: 14px;
+    }
+
+    .notice.error {
+      color: #ffb4b4;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .station {
+      min-height: 240px;
+      padding: 18px;
+      border-radius: 8px;
+      border: 1px solid var(--line);
+      background: var(--green-soft);
+      box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.03);
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      transition: background 180ms ease, border-color 180ms ease;
+    }
+
+    .station.occupied {
+      background: var(--red-soft);
+      border-color: rgba(240, 82, 82, 0.6);
+    }
+
+    .station-top {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      align-items: start;
+    }
+
+    .station-name {
+      font-size: 34px;
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .badge {
+      min-width: 92px;
+      padding: 8px 10px;
+      border-radius: 999px;
+      text-align: center;
+      font-size: 13px;
+      font-weight: 900;
+      color: #08130d;
+      background: var(--green);
+    }
+
+    .occupied .badge {
+      color: #220609;
+      background: var(--red);
+    }
+
+    .timer {
+      margin: 24px 0 8px;
+      font-variant-numeric: tabular-nums;
+      font-size: clamp(40px, 7vw, 68px);
+      font-weight: 900;
+      line-height: 1;
+    }
+
+    .meta {
+      display: grid;
+      gap: 4px;
+      color: var(--muted);
+      min-height: 48px;
+      font-size: 15px;
+    }
+
+    .price {
+      color: var(--text);
+      font-weight: 800;
+    }
+
+    .station-actions {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 9px;
+      margin-top: 18px;
+    }
+
+    @media (max-width: 920px) {
+      header {
+        align-items: start;
+        flex-direction: column;
+      }
+
+      .clock {
+        text-align: left;
+      }
+
+      .toolbar {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .toolbar button {
+        grid-column: span 2;
+      }
+
+      .grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .toolbar {
+        grid-template-columns: 1fr;
+      }
+
+      .toolbar button {
+        grid-column: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Rental PlayStation</h1>
+        <nav aria-label="Navigasi">
+          <a class="active" href="/playstation-status.html">Dashboard</a>
+          <a href="/history.html">History Transaksi</a>
+        </nav>
+      </div>
+      <div class="clock" id="clock">--:--:--</div>
+    </header>
+
+    <section class="toolbar" aria-label="Kontrol rental">
+      <div class="field">
+        <label for="customerName">Nama pelanggan</label>
+        <input id="customerName" type="text" placeholder="Contoh: Budi" autocomplete="name" />
+      </div>
+
+      <div class="field">
+        <label for="stationSelect">Pilih unit</label>
+        <select id="stationSelect"></select>
+      </div>
+
+      <div class="field">
+        <label for="durationSelect">Durasi</label>
+        <select id="durationSelect">
+          <option value="30">30 menit</option>
+          <option value="60" selected>1 jam</option>
+          <option value="90">1 jam 30 menit</option>
+          <option value="120">2 jam</option>
+          <option value="custom">Custom</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="customMinutes">Menit</label>
+        <input id="customMinutes" type="number" min="1" max="1440" value="60" />
+      </div>
+
+      <button class="primary" id="startBtn" type="button">Mulai</button>
+    </section>
+
+    <div class="notice" id="notice"></div>
+    <section class="grid" id="stationGrid" aria-label="Status PlayStation"></section>
+  </main>
+
+  <script>
+    const API_BASE = location.protocol === "file:" ? "http://localhost:3000" : "";
+    const grid = document.querySelector("#stationGrid");
+    const stationSelect = document.querySelector("#stationSelect");
+    const durationSelect = document.querySelector("#durationSelect");
+    const customMinutes = document.querySelector("#customMinutes");
+    const customerName = document.querySelector("#customerName");
+    const clock = document.querySelector("#clock");
+    const notice = document.querySelector("#notice");
+    let consoles = [];
+
+    function pad(value) {
+      return String(value).padStart(2, "0");
+    }
+
+    function formatRemaining(ms) {
+      const totalSeconds = Math.max(0, Math.ceil(ms / 1000));
+      const hours = Math.floor(totalSeconds / 3600);
+      const minutes = Math.floor((totalSeconds % 3600) / 60);
+      const seconds = totalSeconds % 60;
+      return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    }
+
+    function formatMoney(value) {
+      return new Intl.NumberFormat("id-ID", {
+        style: "currency",
+        currency: "IDR",
+        maximumFractionDigits: 0
+      }).format(value);
+    }
+
+    function getDurationMinutes() {
+      if (durationSelect.value === "custom") {
+        return Math.max(1, Number(customMinutes.value || 1));
+      }
+
+      return Number(durationSelect.value);
+    }
+
+    function setNotice(message, type = "") {
+      notice.textContent = message;
+      notice.className = `notice ${type}`;
+    }
+
+    async function api(path, options = {}) {
+      const response = await fetch(`${API_BASE}${path}`, {
+        headers: { "Content-Type": "application/json" },
+        ...options
+      });
+
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        throw new Error(data.error || "Terjadi kesalahan.");
+      }
+
+      return data;
+    }
+
+    async function loadConsoles() {
+      try {
+        consoles = await api("/api/consoles");
+        renderSelect();
+        render();
+        setNotice("");
+      } catch (error) {
+        setNotice(`Backend belum aktif: ${error.message}`, "error");
+      }
+    }
+
+    function renderSelect() {
+      const selected = stationSelect.value;
+      stationSelect.innerHTML = consoles.map((item) => `
+        <option value="${item.id_con}" ${item.status === "occupied" ? "disabled" : ""}>
+          ${item.nama_console} - ${formatMoney(item.tarif_per_jam)}/jam
+        </option>
+      `).join("");
+
+      if ([...stationSelect.options].some((option) => option.value === selected && !option.disabled)) {
+        stationSelect.value = selected;
+      }
+    }
+
+    function render() {
+      const now = Date.now();
+      grid.innerHTML = consoles.map((item) => {
+        const occupied = item.status === "occupied";
+        const endAt = item.jam_selesai ? new Date(item.jam_selesai).getTime() : null;
+        const remaining = occupied && endAt ? formatRemaining(endAt - now) : "00:00:00";
+        const total = Math.ceil((item.tarif_per_jam * getDurationMinutes()) / 60);
+        const until = occupied && endAt
+          ? `Selesai ${new Date(item.jam_selesai).toLocaleTimeString("id-ID", {
+              hour: "2-digit",
+              minute: "2-digit"
+            })}`
+          : "Siap dipakai";
+
+        return `
+          <article class="station ${occupied ? "occupied" : ""}">
+            <div>
+              <div class="station-top">
+                <div class="station-name">${item.nama_console}</div>
+                <div class="badge">${occupied ? "OCCUPIED" : "AVAILABLE"}</div>
+              </div>
+              <div class="timer">${remaining}</div>
+              <div class="meta">
+                <span>${until}</span>
+                <span>Tarif ${formatMoney(item.tarif_per_jam)}/jam</span>
+                ${occupied ? `<span>Pelanggan: ${item.nama_pelanggan || "-"}</span>` : `<span class="price">Estimasi: ${formatMoney(total)}</span>`}
+              </div>
+            </div>
+            <div class="station-actions">
+              <button class="danger" type="button" data-action="finish" data-id="${item.id_con}" ${occupied ? "" : "disabled"}>Selesai</button>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    document.querySelector("#startBtn").addEventListener("click", async () => {
+      const namaPelanggan = customerName.value.trim();
+      if (!namaPelanggan) {
+        setNotice("Nama pelanggan wajib diisi.", "error");
+        customerName.focus();
+        return;
+      }
+
+      try {
+        const transaksi = await api("/api/transaksi", {
+          method: "POST",
+          body: JSON.stringify({
+            nama_pelanggan: namaPelanggan,
+            id_con: Number(stationSelect.value),
+            durasi: getDurationMinutes()
+          })
+        });
+
+        customerName.value = "";
+        setNotice(`Transaksi tersimpan. Total bayar: ${formatMoney(transaksi.total_bayar)}.`);
+        await loadConsoles();
+      } catch (error) {
+        setNotice(error.message, "error");
+      }
+    });
+
+    grid.addEventListener("click", async (event) => {
+      const button = event.target.closest("button[data-action='finish']");
+      if (!button) return;
+
+      try {
+        await api(`/api/consoles/${button.dataset.id}/finish`, { method: "POST" });
+        setNotice("Console sudah dikosongkan.");
+        await loadConsoles();
+      } catch (error) {
+        setNotice(error.message, "error");
+      }
+    });
+
+    durationSelect.addEventListener("change", () => {
+      customMinutes.disabled = durationSelect.value !== "custom";
+      render();
+    });
+
+    customMinutes.addEventListener("input", render);
+
+    setInterval(() => {
+      clock.textContent = new Date().toLocaleTimeString("id-ID");
+      render();
+    }, 1000);
+
+    setInterval(loadConsoles, 15000);
+
+    customMinutes.disabled = true;
+    loadConsoles();
+  </script>
+</body>
+</html>
